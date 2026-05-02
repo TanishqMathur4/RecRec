@@ -6,8 +6,10 @@ import Register from "./pages/Register";
 import Home from "./pages/Home";
 import Onboarding from "./pages/Onboarding";
 
+// Requires auth. If no macro target yet, sends to onboarding first.
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, macroTarget } = useAuth();
+
   if (isLoading) {
     return (
       <Box className="min-h-screen flex items-center justify-center">
@@ -15,11 +17,14 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
       </Box>
     );
   }
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
+
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (!macroTarget) return <Navigate to="/onboarding" replace />;
+  return <>{children}</>;
 }
 
 function AppRoutes() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, macroTarget } = useAuth();
 
   if (isLoading) {
     return (
@@ -31,6 +36,7 @@ function AppRoutes() {
 
   return (
     <Routes>
+      {/* Public */}
       <Route
         path="/login"
         element={isAuthenticated ? <Navigate to="/home" replace /> : <Login />}
@@ -39,14 +45,22 @@ function AppRoutes() {
         path="/register"
         element={isAuthenticated ? <Navigate to="/home" replace /> : <Register />}
       />
+
+      {/* Onboarding — auth required, but no macro target needed */}
       <Route
         path="/onboarding"
         element={
-          <ProtectedRoute>
+          !isAuthenticated ? (
+            <Navigate to="/login" replace />
+          ) : macroTarget ? (
+            <Navigate to="/home" replace />
+          ) : (
             <Onboarding />
-          </ProtectedRoute>
+          )
         }
       />
+
+      {/* Protected pages */}
       <Route
         path="/home"
         element={
@@ -55,9 +69,16 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+
+      {/* Root redirect */}
       <Route
         path="/"
-        element={<Navigate to={isAuthenticated ? "/home" : "/login"} replace />}
+        element={
+          <Navigate
+            to={!isAuthenticated ? "/login" : !macroTarget ? "/onboarding" : "/home"}
+            replace
+          />
+        }
       />
     </Routes>
   );

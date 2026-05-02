@@ -21,6 +21,8 @@ def create_app(config_class=Config):
     from . import models  # noqa: F401
 
     from .auth.routes import auth_bp
+    from .profile.routes import profile_bp
     app.register_blueprint(auth_bp)
+    app.register_blueprint(profile_bp)
 
     return app
