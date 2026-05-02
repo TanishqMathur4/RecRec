@@ -21,11 +21,11 @@ interface Segment {
 }
 
 function segmentColor(actual: number | null, target: number): string {
-  if (actual === null || target <= 0) return "#e0e0e0";
+  if (actual === null || target <= 0) return "#b19681";
   const ratio = actual / target;
-  if (ratio >= 0.85 && ratio <= 1.15) return "#4caf50"; // green — within 15%
-  if (ratio >= 0.65 && ratio <= 1.35) return "#ff9800"; // amber — within 35%
-  return "#f44336";                                      // red — far off
+  if (ratio >= 0.85 && ratio <= 1.15) return "#9db18c"; // sage green — within 15%
+  if (ratio >= 0.65 && ratio <= 1.35) return "#dbc894"; // warm gold — within 35%
+  return "#d98b7e";                                      // muted red — far off
 }
 
 export default function MacroBar({ nutrition, target }: Props) {

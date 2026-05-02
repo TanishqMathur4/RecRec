@@ -1,11 +1,127 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+:root {
+  --card: #e7dbbf;
+  --ring: #9db18c;
+  --input: #dbc894;
+  --muted: #decea0;
+  --accent: #dbc894;
+  --border: #b19681;
+  --radius: 0.425rem;
+  --chart-1: #9db18c;
+  --chart-2: #8a9f7b;
+  --chart-3: #bac9b4;
+  --chart-4: #71856a;
+  --chart-5: #5e6e58;
+  --popover: #f3ead2;
+  --primary: #8d9d4f;
+  --sidebar: #e2d1a2;
+  --font-mono: "JetBrains Mono", monospace;
+  --font-sans: "Merriweather", serif;
+  --secondary: #decea0;
+  --background: #e4d7b0;
+  --font-serif: "Source Serif 4", serif;
+  --foreground: #5c4b3e;
+  --destructive: #d98b7e;
+  --shadow-blur: 2px;
+  --shadow-color: hsl(88 22% 35% / 0.15);
+  --sidebar-ring: #9db18c;
+  --shadow-spread: 0px;
+  --shadow-opacity: 0.15;
+  --sidebar-accent: #eae5d9;
+  --sidebar-border: #e5e0d4;
+  --card-foreground: #5c4b3e;
+  --shadow-offset-x: 3px;
+  --shadow-offset-y: 3px;
+  --sidebar-primary: #9db18c;
+  --muted-foreground: #85766a;
+  --accent-foreground: #5c4b3e;
+  --popover-foreground: #5c4b3e;
+  --primary-foreground: #fdfbf6;
+  --sidebar-foreground: #5c4b3e;
+  --secondary-foreground: #5c4b3e;
+  --destructive-foreground: #faf8f2;
+  --sidebar-accent-foreground: #5c4b3e;
+  --sidebar-primary-foreground: #fdfbf6;
+}
+
+.dark {
+  --card: #413c33;
+  --ring: #8a9f7b;
+  --input: #5a5345;
+  --muted: #4a4439;
+  --accent: #a18f5c;
+  --border: #5a5345;
+  --chart-1: #8a9f7b;
+  --chart-2: #9db18c;
+  --chart-3: #71856a;
+  --chart-4: #a18f5c;
+  --chart-5: #5e6e58;
+  --popover: #413c33;
+  --primary: #8a9f7b;
+  --sidebar: #3a3529;
+  --secondary: #5a5345;
+  --background: #3a3529;
+  --foreground: #ede4d4;
+  --destructive: #b5766a;
+  --sidebar-ring: #8a9f7b;
+  --sidebar-accent: #a18f5c;
+  --sidebar-border: #5a5345;
+  --card-foreground: #ede4d4;
+  --sidebar-primary: #8a9f7b;
+  --muted-foreground: #a8a096;
+  --accent-foreground: #2a2521;
+  --popover-foreground: #ede4d4;
+  --primary-foreground: #2a2521;
+  --sidebar-foreground: #ede4d4;
+  --secondary-foreground: #ede4d4;
+  --destructive-foreground: #f0e9db;
+  --sidebar-accent-foreground: #2a2521;
+  --sidebar-primary-foreground: #2a2521;
+}
+
+@theme inline {
+  --color-card: var(--card);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-secondary: var(--secondary);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-destructive: var(--destructive);
+  --color-popover: var(--popover);
+  --color-muted-foreground: var(--muted-foreground);
+  --font-sans: var(--font-sans);
+  --font-serif: var(--font-serif);
+  --font-mono: var(--font-mono);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
 
 body {
   margin: 0;
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
 }
 
 #root {
   min-height: 100svh;
 }
+
+/* Markdown instruction rendering */
+.recipe-instructions p   { margin: 0 0 0.5rem; }
+.recipe-instructions ol,
+.recipe-instructions ul  { padding-left: 1.5rem; margin: 0 0 0.75rem; }
+.recipe-instructions li  { margin-bottom: 0.35rem; }
+.recipe-instructions h1,
+.recipe-instructions h2,
+.recipe-instructions h3  { margin: 0.75rem 0 0.35rem; font-family: var(--font-serif); }

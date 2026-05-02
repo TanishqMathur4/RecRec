@@ -71,7 +71,7 @@ export default function Home() {
       {macroTarget && (
         <Box
           className="flex gap-4 flex-wrap mb-5 p-3 rounded"
-          sx={{ bgcolor: "grey.50", border: "1px solid", borderColor: "divider" }}
+          sx={{ bgcolor: "background.paper", border: "1px solid", borderColor: "divider" }}
         >
           {[
             { label: "Calories", value: `${macroTarget.calories_kcal} kcal` },

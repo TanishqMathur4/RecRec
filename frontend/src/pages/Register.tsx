@@ -46,7 +46,7 @@ export default function Register() {
   };
 
   return (
-    <Box className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+    <Box className="min-h-screen flex items-center justify-center px-4">
       <Card sx={{ width: "100%", maxWidth: 420 }} elevation={2}>
         <CardContent sx={{ p: 4 }}>
           <Typography variant="h5" sx={{ fontWeight: 700, mb: 1 }}>Create your account</Typography>

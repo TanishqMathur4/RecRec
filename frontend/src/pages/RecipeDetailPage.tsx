@@ -157,7 +157,7 @@ export default function RecipeDetailPage() {
       <Box sx={{ mb: 3 }}>
         <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>Instructions</Typography>
         {recipe.instructions_md ? (
-          <Box sx={{ "& p": { mb: 1 }, "& ol, & ul": { pl: 2, mb: 1 }, "& li": { mb: 0.5 } }}>
+          <Box className="recipe-instructions">
             <ReactMarkdown>{recipe.instructions_md}</ReactMarkdown>
           </Box>
         ) : (

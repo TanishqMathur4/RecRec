@@ -192,7 +192,7 @@ export default function Onboarding() {
   const isConfirmStep = step === 4;
 
   return (
-    <Box className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-8">
+    <Box className="min-h-screen flex items-center justify-center px-4 py-8">
       <Card sx={{ width: "100%", maxWidth: 560 }} elevation={2}>
         <CardContent sx={{ p: 4 }}>
           <Typography variant="h5" sx={{ fontWeight: 700, mb: 0.5 }}>
@@ -369,7 +369,7 @@ function StepActivity({ form, set }: { form: FormState; set: (k: keyof FormState
             cursor: "pointer",
             borderColor: form.activity === opt.value ? "primary.main" : "divider",
             borderWidth: form.activity === opt.value ? 2 : 1,
-            bgcolor: form.activity === opt.value ? "primary.50" : "background.paper",
+            bgcolor: form.activity === opt.value ? "rgba(141,157,79,0.15)" : "background.paper",
             transition: "all 0.15s",
             "&:hover": { borderColor: "primary.main" },
           }}
@@ -398,7 +398,7 @@ function StepGoal({ form, set }: { form: FormState; set: (k: keyof FormState, v:
             cursor: "pointer",
             borderColor: form.goal === opt.value ? "primary.main" : "divider",
             borderWidth: form.goal === opt.value ? 2 : 1,
-            bgcolor: form.goal === opt.value ? "primary.50" : "background.paper",
+            bgcolor: form.goal === opt.value ? "rgba(141,157,79,0.15)" : "background.paper",
             transition: "all 0.15s",
             "&:hover": { borderColor: "primary.main" },
           }}
@@ -450,11 +450,11 @@ function StepConfirm({
   if (!target) return null;
 
   const macros = [
-    { label: "Calories", value: `${target.calories_kcal} kcal`, color: "#2563eb" },
-    { label: "Protein", value: `${target.protein_g}g`, color: "#16a34a" },
-    { label: "Carbs", value: `${target.carbs_g}g`, color: "#d97706" },
-    { label: "Fat", value: `${target.fat_g}g`, color: "#dc2626" },
-    { label: "Fibre", value: `${target.fiber_g}g`, color: "#7c3aed" },
+    { label: "Calories", value: `${target.calories_kcal} kcal`, color: "#8d9d4f" },
+    { label: "Protein",  value: `${target.protein_g}g`,         color: "#9db18c" },
+    { label: "Carbs",    value: `${target.carbs_g}g`,           color: "#dbc894" },
+    { label: "Fat",      value: `${target.fat_g}g`,             color: "#b19681" },
+    { label: "Fibre",    value: `${target.fiber_g}g`,           color: "#71856a" },
   ];
 
   return (
