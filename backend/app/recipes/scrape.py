@@ -124,10 +124,10 @@ def _parse_ingredient_line(line: str) -> dict:
     try:
         parsed = parse_ingredient(line)
         # ingredient-parser returns a ParsedIngredient object
-        name = parsed.name.text if parsed.name else line
+        name = parsed.name[0].text if parsed.name else line
         amount_obj = parsed.amount[0] if parsed.amount else None
         amount = float(amount_obj.quantity) if amount_obj and amount_obj.quantity else None
-        unit = amount_obj.unit if amount_obj else None
+        unit = str(amount_obj.unit) if amount_obj else None
     except Exception:
         return {"name": line, "quantity_grams": 100.0, "original_text": line, "resolved": False}
 
