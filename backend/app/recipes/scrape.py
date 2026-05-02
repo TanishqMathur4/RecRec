@@ -10,6 +10,7 @@ Flow:
 
 import re
 from recipe_scrapers import scrape_me, scrape_html, WebsiteNotImplementedError
+import requests as _requests
 from ingredient_parser import parse_ingredient
 
 # ---------------------------------------------------------------------------
@@ -196,14 +197,18 @@ def scrape_url(url: str) -> dict:
     Raises ValueError for other scraping failures.
     """
     try:
-        scraper = scrape_me(url, wild_mode=False)
-    except WebsiteNotImplementedError:
-        raise
-    except Exception as e:
-        # Try wild mode as a fallback for supported-but-broken pages
+        scraper = scrape_me(url)
+    except Exception:
+        # scrape_me uses urllib which gets blocked by many sites (403) or fails for
+        # unsupported sites — fall back to requests with a browser User-Agent and
+        # generic schema.org extraction
         try:
-            scraper = scrape_me(url, wild_mode=True)
-        except Exception:
+            html = _requests.get(
+                url, timeout=15,
+                headers={"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"}
+            ).text
+            scraper = scrape_html(html, org_url=url, supported_only=False)
+        except Exception as e:
             raise ValueError(f"Could not scrape this URL: {e}") from e
 
     try:
