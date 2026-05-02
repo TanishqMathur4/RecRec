@@ -11,13 +11,11 @@ def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
 
-    # Init extensions
     db.init_app(app)
     migrate.init_app(app, db)
     jwt.init_app(app)
     cors.init_app(app, resources={r"/api/*": {"origins": app.config["FRONTEND_ORIGIN"]}})
 
-    # Import models so Flask-Migrate can detect them
     from . import models  # noqa: F401
 
     from .auth.routes import auth_bp
@@ -27,4 +25,37 @@ def create_app(config_class=Config):
     app.register_blueprint(profile_bp)
     app.register_blueprint(recipes_bp)
 
+    _register_error_handlers(app)
+
     return app
+
+
+def _register_error_handlers(app):
+    from flask import jsonify
+    from flask_jwt_extended.exceptions import NoAuthorizationError, InvalidHeaderError
+    from jwt.exceptions import ExpiredSignatureError, DecodeError
+
+    @app.errorhandler(404)
+    def not_found(_e):
+        return jsonify({"error": "Not found."}), 404
+
+    @app.errorhandler(405)
+    def method_not_allowed(_e):
+        return jsonify({"error": "Method not allowed."}), 405
+
+    @app.errorhandler(500)
+    def internal_error(_e):
+        return jsonify({"error": "An unexpected error occurred."}), 500
+
+    @app.errorhandler(NoAuthorizationError)
+    @app.errorhandler(InvalidHeaderError)
+    def missing_token(_e):
+        return jsonify({"error": "Authentication required."}), 401
+
+    @app.errorhandler(ExpiredSignatureError)
+    def expired_token(_e):
+        return jsonify({"error": "Session expired. Please log in again."}), 401
+
+    @app.errorhandler(DecodeError)
+    def bad_token(_e):
+        return jsonify({"error": "Invalid token."}), 401

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Alert,
@@ -24,6 +24,8 @@ const emptyIngredient = (): IngredientRow => ({ name: "", quantity_grams: "" });
 export default function AddRecipe() {
   const navigate = useNavigate();
   const [tab, setTab] = useState(0);
+
+  useEffect(() => { document.title = "Add recipe · RecRec"; }, []);
 
   // ── URL tab state ────────────────────────────────────────────────────────
   const [url, setUrl] = useState("");
@@ -62,12 +64,20 @@ export default function AddRecipe() {
 
   // ── Manual submit ────────────────────────────────────────────────────────
   async function handleManualSubmit() {
+    const local: Record<string, string> = {};
+    if (!title.trim()) local.title = "Title is required.";
+    const validServings = parseInt(servings);
+    if (!validServings || validServings < 1) local.servings = "Must be at least 1.";
+    const validIngredients = ingredients.filter(
+      (r) => r.name.trim() && parseFloat(r.quantity_grams) > 0
+    );
+    if (validIngredients.length === 0)
+      local.ingredients = "Add at least one ingredient with a quantity.";
+    if (Object.keys(local).length) { setErrors(local); return; }
+
     setErrors({});
     setSaving(true);
     try {
-      const validIngredients = ingredients.filter(
-        (r) => r.name.trim() && parseFloat(r.quantity_grams) > 0
-      );
       const { recipe } = await createRecipe({
         title: title.trim(),
         description: description.trim() || undefined,
