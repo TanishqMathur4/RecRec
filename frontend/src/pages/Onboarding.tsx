@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import {
   Box,
   Button,
@@ -75,6 +76,7 @@ const STEPS = ["Basics", "Activity", "Goal", "Health flags", "Confirm"];
 
 export default function Onboarding() {
   const navigate = useNavigate();
+  const { refreshProfile } = useAuth();
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -171,7 +173,16 @@ export default function Onboarding() {
       case 3:
         return <StepHealthFlags form={form} set={set} />;
       case 4:
-        return <StepConfirm target={preview} onEdit={() => setStep(0)} onDone={() => navigate("/home")} />;
+        return (
+          <StepConfirm
+            target={preview}
+            onEdit={() => setStep(0)}
+            onDone={async () => {
+              await refreshProfile();
+              navigate("/home");
+            }}
+          />
+        );
       default:
         return null;
     }

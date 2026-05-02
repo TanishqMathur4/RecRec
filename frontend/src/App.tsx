@@ -5,19 +5,14 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Home from "./pages/Home";
 import Onboarding from "./pages/Onboarding";
+import AddRecipe from "./pages/AddRecipe";
+import RecipeDetailPage from "./pages/RecipeDetailPage";
 
-// Requires auth. If no macro target yet, sends to onboarding first.
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading, macroTarget } = useAuth();
-
   if (isLoading) {
-    return (
-      <Box className="min-h-screen flex items-center justify-center">
-        <CircularProgress />
-      </Box>
-    );
+    return <Box className="min-h-screen flex items-center justify-center"><CircularProgress /></Box>;
   }
-
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   if (!macroTarget) return <Navigate to="/onboarding" replace />;
   return <>{children}</>;
@@ -25,60 +20,31 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 function AppRoutes() {
   const { isAuthenticated, isLoading, macroTarget } = useAuth();
-
   if (isLoading) {
-    return (
-      <Box className="min-h-screen flex items-center justify-center">
-        <CircularProgress />
-      </Box>
-    );
+    return <Box className="min-h-screen flex items-center justify-center"><CircularProgress /></Box>;
   }
 
   return (
     <Routes>
-      {/* Public */}
-      <Route
-        path="/login"
-        element={isAuthenticated ? <Navigate to="/home" replace /> : <Login />}
-      />
-      <Route
-        path="/register"
-        element={isAuthenticated ? <Navigate to="/home" replace /> : <Register />}
-      />
+      <Route path="/login" element={isAuthenticated ? <Navigate to="/home" replace /> : <Login />} />
+      <Route path="/register" element={isAuthenticated ? <Navigate to="/home" replace /> : <Register />} />
 
-      {/* Onboarding — auth required, but no macro target needed */}
       <Route
         path="/onboarding"
         element={
-          !isAuthenticated ? (
-            <Navigate to="/login" replace />
-          ) : macroTarget ? (
-            <Navigate to="/home" replace />
-          ) : (
-            <Onboarding />
-          )
+          !isAuthenticated ? <Navigate to="/login" replace /> :
+          macroTarget ? <Navigate to="/home" replace /> :
+          <Onboarding />
         }
       />
 
-      {/* Protected pages */}
-      <Route
-        path="/home"
-        element={
-          <ProtectedRoute>
-            <Home />
-          </ProtectedRoute>
-        }
-      />
+      <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+      <Route path="/recipes/add" element={<ProtectedRoute><AddRecipe /></ProtectedRoute>} />
+      <Route path="/recipes/:id" element={<ProtectedRoute><RecipeDetailPage /></ProtectedRoute>} />
 
-      {/* Root redirect */}
       <Route
         path="/"
-        element={
-          <Navigate
-            to={!isAuthenticated ? "/login" : !macroTarget ? "/onboarding" : "/home"}
-            replace
-          />
-        }
+        element={<Navigate to={!isAuthenticated ? "/login" : !macroTarget ? "/onboarding" : "/home"} replace />}
       />
     </Routes>
   );
