@@ -7,6 +7,9 @@ import Home from "./pages/Home";
 import Onboarding from "./pages/Onboarding";
 import AddRecipe from "./pages/AddRecipe";
 import RecipeDetailPage from "./pages/RecipeDetailPage";
+import Progress from "./pages/Progress";
+import Profile from "./pages/Profile";
+import Layout from "./components/Layout";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading, macroTarget } = useAuth();
@@ -15,7 +18,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   if (!macroTarget) return <Navigate to="/onboarding" replace />;
-  return <>{children}</>;
+  return <Layout>{children}</Layout>;
 }
 
 function AppRoutes() {
@@ -28,7 +31,6 @@ function AppRoutes() {
     <Routes>
       <Route path="/login" element={isAuthenticated ? <Navigate to="/home" replace /> : <Login />} />
       <Route path="/register" element={isAuthenticated ? <Navigate to="/home" replace /> : <Register />} />
-
       <Route
         path="/onboarding"
         element={
@@ -37,11 +39,11 @@ function AppRoutes() {
           <Onboarding />
         }
       />
-
-      <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
-      <Route path="/recipes/add" element={<ProtectedRoute><AddRecipe /></ProtectedRoute>} />
-      <Route path="/recipes/:id" element={<ProtectedRoute><RecipeDetailPage /></ProtectedRoute>} />
-
+      <Route path="/home"         element={<ProtectedRoute><Home /></ProtectedRoute>} />
+      <Route path="/progress"     element={<ProtectedRoute><Progress /></ProtectedRoute>} />
+      <Route path="/profile"      element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+      <Route path="/recipes/add"  element={<ProtectedRoute><AddRecipe /></ProtectedRoute>} />
+      <Route path="/recipes/:id"  element={<ProtectedRoute><RecipeDetailPage /></ProtectedRoute>} />
       <Route
         path="/"
         element={<Navigate to={!isAuthenticated ? "/login" : !macroTarget ? "/onboarding" : "/home"} replace />}

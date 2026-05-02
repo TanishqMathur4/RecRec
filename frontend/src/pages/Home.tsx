@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Box, Button, Card, CardActionArea, CardContent,
-  Chip, Skeleton, Typography,
+  Chip, InputAdornment, Skeleton, TextField, Typography,
 } from "@mui/material";
+import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 import { fetchRecipes } from "../api/recipes";
@@ -49,6 +50,7 @@ export default function Home() {
   const { showToast } = useToast();
   const navigate = useNavigate();
   const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -90,7 +92,7 @@ export default function Home() {
         </Box>
       )}
 
-      <Box className="flex items-center justify-between mb-3">
+      <Box className="flex items-center justify-between mb-2">
         <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
           {macroTarget ? "Best matches for you" : "Recipes"}
         </Typography>
@@ -98,6 +100,22 @@ export default function Home() {
           + Add recipe
         </Button>
       </Box>
+
+      <TextField
+        placeholder="Search recipes..."
+        size="small" fullWidth
+        value={search} onChange={(e) => setSearch(e.target.value)}
+        sx={{ mb: 2 }}
+        slotProps={{
+          input: {
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchRoundedIcon fontSize="small" sx={{ color: "text.secondary" }} />
+              </InputAdornment>
+            ),
+          },
+        }}
+      />
 
       {loading ? (
         <RecipeSkeletons />
@@ -113,7 +131,10 @@ export default function Home() {
         </Box>
       ) : (
         <Box className="flex flex-col gap-2">
-          {recipes.map((r) => (
+          {recipes.filter((r) => {
+            const q = search.toLowerCase();
+            return !q || r.title.toLowerCase().includes(q) || (r.cuisine ?? "").toLowerCase().includes(q);
+          }).map((r) => (
             <Card key={r.id} variant="outlined">
               <CardActionArea onClick={() => navigate(`/recipes/${r.id}`)}>
                 <CardContent sx={{ py: 1.5, "&:last-child": { pb: 1.5 } }}>

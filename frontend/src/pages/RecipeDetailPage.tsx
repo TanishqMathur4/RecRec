@@ -2,19 +2,25 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import {
-  Alert, Box, Button, Chip,
-  Divider, Skeleton, Typography,
+  Alert, Box, Button, Chip, CircularProgress,
+  Dialog, DialogActions, DialogContent, DialogTitle,
+  Divider, Skeleton, TextField, Typography,
 } from "@mui/material";
+import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import { useAuth } from "../context/AuthContext";
+import { useToast } from "../context/ToastContext";
 import { fetchRecipe } from "../api/recipes";
 import type { Recipe } from "../api/recipes";
+import { logMeal } from "../api/log";
 import { score_recipe } from "../utils/score";
 
 export default function RecipeDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { macroTarget } = useAuth();
+  const { showToast } = useToast();
   const [recipe, setRecipe] = useState<Recipe | null>(null);
+  const [logOpen, setLogOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -56,9 +62,13 @@ export default function RecipeDetailPage() {
 
   return (
     <Box sx={{ maxWidth: 680, mx: "auto", p: 4 }}>
-      <Button size="small" onClick={() => navigate(-1)} sx={{ mb: 2 }}>
-        ← Back
-      </Button>
+      <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
+        <Button size="small" onClick={() => navigate(-1)}>← Back</Button>
+        <Button size="small" startIcon={<HomeRoundedIcon />} onClick={() => navigate("/home")}>Home</Button>
+        <Button size="small" variant="contained" onClick={() => setLogOpen(true)} sx={{ ml: "auto" }}>
+          Log this meal
+        </Button>
+      </Box>
 
       <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>{recipe.title}</Typography>
 
@@ -183,6 +193,54 @@ export default function RecipeDetailPage() {
           </Typography>
         </>
       )}
+
+      <LogMealDialog
+        open={logOpen}
+        recipeId={recipe.id}
+        recipeTitle={recipe.title}
+        onClose={() => setLogOpen(false)}
+        onLogged={() => { showToast("Meal logged!", "success"); setLogOpen(false); }}
+      />
     </Box>
+  );
+}
+
+function LogMealDialog({
+  open, recipeId, recipeTitle, onClose, onLogged,
+}: { open: boolean; recipeId: string; recipeTitle: string; onClose: () => void; onLogged: () => void }) {
+  const { showToast } = useToast();
+  const [servings, setServings] = useState("1");
+  const [saving, setSaving] = useState(false);
+
+  async function handleLog() {
+    setSaving(true);
+    try {
+      await logMeal(recipeId, parseFloat(servings) || 1);
+      onLogged();
+    } catch {
+      showToast("Couldn't log that meal.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
+      <DialogTitle sx={{ fontFamily: "var(--font-serif)" }}>Log this meal</DialogTitle>
+      <DialogContent>
+        <Typography variant="body2" sx={{ mb: 2, color: "text.secondary" }}>{recipeTitle}</Typography>
+        <TextField
+          label="Servings" type="number" fullWidth autoFocus
+          value={servings} onChange={(e) => setServings(e.target.value)}
+          slotProps={{ htmlInput: { min: 0.25, step: 0.25 } }}
+        />
+      </DialogContent>
+      <DialogActions sx={{ px: 3, pb: 2 }}>
+        <Button variant="outlined" onClick={onClose}>Cancel</Button>
+        <Button variant="contained" onClick={handleLog} disabled={saving || !(parseFloat(servings) > 0)}>
+          {saving ? <CircularProgress size={20} color="inherit" /> : "Log it"}
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 }

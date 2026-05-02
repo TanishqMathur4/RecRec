@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, date
 from werkzeug.security import generate_password_hash, check_password_hash
 from .extensions import db
 
@@ -226,4 +226,48 @@ class NutritionFact(db.Model):
             "source": self.source,
             "nutrition_confidence": self.nutrition_confidence,
             "computed_at": self.computed_at.isoformat(),
+        }
+
+
+class DailyLog(db.Model):
+    """One row per user per calendar day — aggregation anchor for meal entries."""
+    __tablename__ = "daily_logs"
+    __table_args__ = (db.UniqueConstraint("user_id", "date"),)
+
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id = db.Column(db.String(36), db.ForeignKey("users.id"), nullable=False)
+    date = db.Column(db.Date, nullable=False, default=lambda: date.today())
+
+    entries = db.relationship("MealEntry", back_populates="daily_log", cascade="all, delete-orphan")
+
+
+class MealEntry(db.Model):
+    """A single recipe logged as eaten within a DailyLog."""
+    __tablename__ = "meal_entries"
+
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    daily_log_id = db.Column(db.String(36), db.ForeignKey("daily_logs.id"), nullable=False)
+    recipe_id = db.Column(db.String(36), db.ForeignKey("recipes.id"), nullable=False)
+    servings = db.Column(db.Float, nullable=False, default=1.0)
+    logged_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+    daily_log = db.relationship("DailyLog", back_populates="entries")
+    recipe = db.relationship("Recipe")
+
+    def to_dict(self):
+        n = self.recipe.nutrition_fact
+        factor = self.servings
+        return {
+            "id": self.id,
+            "recipe_id": self.recipe_id,
+            "recipe_title": self.recipe.title,
+            "recipe_image": self.recipe.image_url,
+            "servings": self.servings,
+            "logged_at": self.logged_at.isoformat(),
+            "nutrition": {
+                "calories_kcal": round((n.calories_kcal or 0) * factor, 1) if n else None,
+                "protein_g":     round((n.protein_g or 0) * factor, 1)     if n else None,
+                "carbs_g":       round((n.carbs_g or 0) * factor, 1)       if n else None,
+                "fat_g":         round((n.fat_g or 0) * factor, 1)         if n else None,
+            },
         }

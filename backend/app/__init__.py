@@ -21,9 +21,11 @@ def create_app(config_class=Config):
     from .auth.routes import auth_bp
     from .profile.routes import profile_bp
     from .recipes.routes import recipes_bp
+    from .log.routes import log_bp
     app.register_blueprint(auth_bp)
     app.register_blueprint(profile_bp)
     app.register_blueprint(recipes_bp)
+    app.register_blueprint(log_bp)
 
     _register_error_handlers(app)
 
