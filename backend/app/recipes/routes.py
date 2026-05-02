@@ -2,10 +2,11 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from recipe_scrapers import WebsiteNotImplementedError
 from ..extensions import db
-from ..models import Recipe, Ingredient, NutritionFact
+from ..models import Recipe, Ingredient, NutritionFact, MacroTarget
 from ..nutrition.compute import compute_recipe_nutrition
 from ..nutrition.usda import search_food
 from .scrape import scrape_url
+from ..matching.score import score_recipes
 
 recipes_bp = Blueprint("recipes", __name__, url_prefix="/api")
 
@@ -177,15 +178,27 @@ def get_recipe(recipe_id: str):
 @recipes_bp.get("/recipes")
 @jwt_required()
 def list_recipes():
-    limit = min(int(request.args.get("limit", 20)), 100)
+    user_id = get_jwt_identity()
+    limit = min(int(request.args.get("limit", 50)), 100)
     offset = int(request.args.get("offset", 0))
+
     recipes = (Recipe.query
                .order_by(Recipe.created_at.desc())
                .offset(offset)
                .limit(limit)
                .all())
+
+    recipe_dicts = [r.to_dict() for r in recipes]
+
+    macro_target = db.session.get(MacroTarget, user_id)
+    if macro_target:
+        recipe_dicts = score_recipes(recipe_dicts, macro_target.to_dict())
+    else:
+        for r in recipe_dicts:
+            r["match_score"] = None
+
     return jsonify({
-        "recipes": [r.to_dict() for r in recipes],
+        "recipes": recipe_dicts,
         "limit": limit,
         "offset": offset,
     }), 200

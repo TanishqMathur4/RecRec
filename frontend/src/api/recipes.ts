@@ -38,6 +38,7 @@ export interface Recipe {
   created_at: string;
   nutrition: NutritionFact | null;
   ingredients?: RecipeIngredient[];
+  match_score: number | null;
 }
 
 export interface IngredientRow {
