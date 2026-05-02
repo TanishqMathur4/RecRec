@@ -1,11 +1,21 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
+from recipe_scrapers import WebsiteNotImplementedError, scrape_me
 from ..extensions import db
-from ..models import Recipe, Ingredient
+from ..models import Recipe, Ingredient, NutritionFact
 from ..nutrition.compute import compute_recipe_nutrition
 from ..nutrition.usda import search_food
+from .scrape import scrape_url
 
 recipes_bp = Blueprint("recipes", __name__, url_prefix="/api")
+
+# A curated sample shown to users when a site isn't supported.
+FEATURED_SITES = [
+    "allrecipes.com", "bbcgoodfood.com", "budgetbytes.com",
+    "delish.com", "epicurious.com", "food52.com",
+    "foodnetwork.com", "halfbakedharvest.com", "minimalistbaker.com",
+    "seriouseats.com", "skinnytaste.com", "tasty.co",
+]
 
 
 def _validate_recipe_input(data: dict) -> tuple[dict | None, dict | None]:
@@ -64,12 +74,95 @@ def create_recipe():
         created_by_user_id=user_id,
     )
     db.session.add(recipe)
-    db.session.flush()  # get recipe.id before computing nutrition
+    db.session.flush()
 
     compute_recipe_nutrition(recipe.id, data["ingredients"], data["servings"])
     db.session.commit()
 
     return jsonify({"recipe": recipe.to_dict(include_ingredients=True)}), 201
+
+
+@recipes_bp.post("/recipes/scrape")
+@jwt_required()
+def scrape_recipe():
+    user_id = get_jwt_identity()
+    body = request.get_json(silent=True) or {}
+    url = (body.get("url") or "").strip()
+
+    if not url:
+        return jsonify({"errors": {"url": "URL is required."}}), 422
+
+    try:
+        scraped = scrape_url(url)
+    except WebsiteNotImplementedError:
+        return jsonify({
+            "error": "This site isn't supported yet. Try one of the sites listed below.",
+            "supported_sites": FEATURED_SITES,
+        }), 422
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 422
+
+    recipe = Recipe(
+        title=scraped["title"],
+        source_url=scraped["source_url"],
+        source_type="scraped",
+        instructions_md=scraped["instructions_md"],
+        cook_minutes=scraped["cook_minutes"],
+        servings=scraped["servings"],
+        image_url=scraped["image_url"],
+        created_by_user_id=user_id,
+    )
+    db.session.add(recipe)
+    db.session.flush()
+
+    scraped_nutrition = scraped.get("scraped_nutrition")
+
+    if scraped_nutrition:
+        # Site provided structured nutrition — store it directly
+        fact = NutritionFact(
+            recipe_id=recipe.id,
+            calories_kcal=scraped_nutrition.get("calories_kcal"),
+            protein_g=scraped_nutrition.get("protein_g"),
+            carbs_g=scraped_nutrition.get("carbs_g"),
+            fat_g=scraped_nutrition.get("fat_g"),
+            fiber_g=scraped_nutrition.get("fiber_g"),
+            sodium_mg=scraped_nutrition.get("sodium_mg"),
+            source="scraped",
+            nutrition_confidence="high",
+        )
+        db.session.add(fact)
+        # Still create RecipeIngredient rows (for display), but skip USDA lookup
+        from ..models import RecipeIngredient, Ingredient as IngredientModel
+        for item in scraped["ingredients"]:
+            name = (item.get("name") or "").lower().strip()
+            if not name:
+                continue
+            ingredient = IngredientModel.query.filter(
+                db.func.lower(IngredientModel.name) == name
+            ).first()
+            if not ingredient:
+                ingredient = IngredientModel(name=name)
+                db.session.add(ingredient)
+                db.session.flush()
+            ri = RecipeIngredient(
+                recipe_id=recipe.id,
+                ingredient_id=ingredient.id,
+                quantity_grams=item.get("quantity_grams", 100.0),
+                original_text=item.get("original_text", name),
+            )
+            db.session.add(ri)
+    else:
+        # No structured nutrition — compute from ingredients via USDA
+        compute_recipe_nutrition(recipe.id, scraped["ingredients"], scraped["servings"])
+
+    db.session.commit()
+    return jsonify({"recipe": recipe.to_dict(include_ingredients=True)}), 201
+
+
+@recipes_bp.get("/recipes/supported-sites")
+@jwt_required()
+def supported_sites():
+    return jsonify({"sites": FEATURED_SITES}), 200
 
 
 @recipes_bp.get("/recipes/<recipe_id>")
@@ -101,12 +194,10 @@ def list_recipes():
 @recipes_bp.get("/ingredients/search")
 @jwt_required()
 def search_ingredients():
-    """Autocomplete: search local DB first, fall back to USDA."""
     q = (request.args.get("q") or "").strip()
     if len(q) < 2:
         return jsonify({"results": []}), 200
 
-    # Local DB first
     local = (Ingredient.query
              .filter(Ingredient.name.ilike(f"%{q}%"))
              .limit(5)
@@ -115,7 +206,6 @@ def search_ingredients():
     if local:
         return jsonify({"results": [{"name": i.name, "fdc_id": i.usda_fdc_id} for i in local]}), 200
 
-    # Fall back to USDA
     usda_results = search_food(q)
     return jsonify({
         "results": [{"name": r["description"], "fdc_id": r["fdc_id"]} for r in usda_results]

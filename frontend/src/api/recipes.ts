@@ -66,6 +66,9 @@ export const createRecipe = (data: {
   ingredients: { name: string; quantity_grams: number; original_text?: string }[];
 }) => client.post<{ recipe: Recipe }>("/api/recipes", data).then((r) => r.data);
 
+export const scrapeRecipe = (url: string) =>
+  client.post<{ recipe: Recipe }>("/api/recipes/scrape", { url }).then((r) => r.data);
+
 export const searchIngredients = (q: string) =>
   client.get<{ results: { name: string; fdc_id: number }[] }>("/api/ingredients/search", { params: { q } })
     .then((r) => r.data);
