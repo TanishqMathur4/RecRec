@@ -32,15 +32,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  // On mount, try to restore session from localStorage token
+  // On mount, try to restore session from localStorage token.
+  // Cap the wait at 10 s so a sleeping Render instance doesn't block forever.
   useEffect(() => {
     const token = localStorage.getItem("access_token");
     if (!token) {
       setIsLoading(false);
       return;
     }
-    fetchMe()
-      .then(async ({ user }) => {
+    const timeout = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("timeout")), 10_000)
+    );
+    Promise.race([fetchMe(), timeout])
+      .then(async (res) => {
+        const { user } = res as Awaited<ReturnType<typeof fetchMe>>;
         setUser(user);
         await loadProfile();
       })

@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { CircularProgress, Box } from "@mui/material";
+import { CircularProgress, Box, Typography } from "@mui/material";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -14,7 +14,10 @@ import Layout from "./components/Layout";
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading, macroTarget } = useAuth();
   if (isLoading) {
-    return <Box className="min-h-screen flex items-center justify-center"><CircularProgress /></Box>;
+    return <Box className="min-h-screen flex flex-col items-center justify-center gap-3">
+    <CircularProgress />
+    <Typography variant="body2" sx={{ color: "text.secondary" }}>Waking up the server…</Typography>
+  </Box>;
   }
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   if (!macroTarget) return <Navigate to="/onboarding" replace />;
@@ -24,7 +27,10 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 function AppRoutes() {
   const { isAuthenticated, isLoading, macroTarget } = useAuth();
   if (isLoading) {
-    return <Box className="min-h-screen flex items-center justify-center"><CircularProgress /></Box>;
+    return <Box className="min-h-screen flex flex-col items-center justify-center gap-3">
+    <CircularProgress />
+    <Typography variant="body2" sx={{ color: "text.secondary" }}>Waking up the server…</Typography>
+  </Box>;
   }
 
   return (
